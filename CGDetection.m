@@ -184,6 +184,7 @@ lineWidthPix = 4;
 line1 = 'Please press Left arrow if you see a gabor patch ';
 line2 = '\n Press Right arrow if no gabor patch was displayed';
 line3 = '\n\n press any key to begin';
+line4 = 'This is the end of the experiment, press any key to exit';
 [screenXpixel, screenYpixels] = Screen ('WindowSize', window)
  Screen('TextSize', window, 50)
  DrawFormattedText(window, [line1 line2 line3],...
@@ -228,23 +229,19 @@ for trial = 1:numTrials
     kPsychDontDoRotation, propertiesMat');
         elseif thisTrialType == 2
             Screen('Flip', window)
-         
+        end 
         % Check the keyboard. The person should press the
         [keyIsDown,secs, keyCode] = KbCheck;
-          if keyCode(escapeKey)
+        if keyCode(escapeKey)
             ShowCursor;
             sca;
             return
-          elseif keyCode(leftKey)
+        elseif keyCode(leftKey)
             response = 1;
-          elseif keyCode(rightKey)
+        elseif keyCode(rightKey)
             response = 2;
-          end
-        end
-        % Flip to the screen
-        Screen('Flip', window)
-        
-    end
+        end  
+    end 
 
     % Calculate the time it took the person to respond
     timeTakenSecs = numFrames * ifi;
@@ -256,8 +253,11 @@ for trial = 1:numTrials
     respMat(1, trial) = response;
     respMat(2, trial) = timeTakenSecs;
 end
-disp('*** Experiment terminated ***')
 
+disp('*** Experiment terminated ***')
+DrawFormattedText(window, [line 4],...
+            'center', screenYpixels * 0.25, white)
+KbStrokeWait;
 % Close the onscreen window
 sca
 return
