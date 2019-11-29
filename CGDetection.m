@@ -216,20 +216,12 @@ for trial = 1:numTrials
     WaitSecs(1);
 
     % This is the drawing loop
-    numFrames = 0;
-    frame = 0;
+    numFrames = 0; 
     Priority(topPriorityLevel);
-    while trial < 4
-        % Increment the number of frames
-        numFrames = numFrames + 1;
-        frame = frame + 1;
-        if frame > numPresLoopFrames
-            frame = 1;
-        end
+    
+    while respToBeMade == true
 
         % Decide what we are showing on this frame
-        showWhat = presVector(frame);
-
         % Draw the gabor or a blank frame
         if thisTrialType == 1
             Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
@@ -250,11 +242,7 @@ for trial = 1:numTrials
           end
         end
         % Flip to the screen
-        if numFrames == 1
-            vbl = Screen('Flip', window);
-        else
-            vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-        end
+        Screen('Flip', window)
         
     end
 
