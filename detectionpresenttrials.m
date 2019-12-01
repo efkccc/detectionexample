@@ -164,11 +164,13 @@ for trial = 1:numTrials
      end
     end
 
-Screen('DrawLines', window, allCoords,...
-        lineWidthPix, white, [xCenter yCenter], 2)
-vbl = Screen('Flip', window)
     % Draw the fixation cross in white, set it to the center of our screen and
     % set good quality antialiasing
+    Screen('DrawLines', window, allCoords,...
+        lineWidthPix, white, [xCenter yCenter], 2)
+    vbl = Screen('Flip', window)
+    
+    % Draw the fixation cross again for isi
     for frame = 1:isiTimeFrames - 1
 
         % Draw the fixation point
@@ -180,12 +182,12 @@ vbl = Screen('Flip', window)
     end 
 
     
-    % This is the drawing loop 
+    % draw gabor
     Priority(topPriorityLevel);
-    %draw gabor
     Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
     kPsychDontDoRotation, propertiesMat')
     WaitSecs (1)
+    
 end
 
 Screen('Flip', window)
