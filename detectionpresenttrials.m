@@ -135,23 +135,31 @@ allCoords = [xCoords; yCoords];
 % Set the line width for our fixation cross
 lineWidthPix = 4;
 
+%----------------------------------------------------------------------
+%                  Response matrix
+%----------------------------------------------------------------------
+
+% This is a four row matrix the first row will record the word we present,
+% the second row the color the word it written in, the third row the key
+% they respond with and the final row the time they took to make there response.
+numTrials = 6
+respMat = nan(2, numTrials);
 
 %----------------------------------------------------------------------
 %                      Experimental Loop
 %----------------------------------------------------------------------
 
-numTrials = 6
-
 % set start screen
-line1 = 'Hello This is the beginning of the experiment ';
+line1 = 'Hello! This is the beginning of the experiment ';
 %line2 = '\n Press the Space bar if a gabor patch was displayed';
-line2 = '\n\n press Spacebar to begin';
+line2 = '\n\n Press Spacebar To Begin';
 [screenXpixel, screenYpixels] = Screen ('WindowSize', window)
 Screen('TextSize', window, 50)
 
  
 % start actual trials 
 for trial = 1:numTrials
+     
     if trial == 1  
     DrawFormattedText(window, [line1 line2 ],...
             'center', screenYpixels * 0.25, white),
@@ -164,13 +172,12 @@ for trial = 1:numTrials
      end
     end
 
-    % Draw the fixation cross in white, set it to the center of our screen and
-    % set good quality antialiasing
-    Screen('DrawLines', window, allCoords,...
+   Screen('DrawLines', window, allCoords,...
         lineWidthPix, white, [xCenter yCenter], 2)
-    vbl = Screen('Flip', window)
+   vbl = Screen('Flip', window)
     
-    % Draw the fixation cross again for isi
+   % Draw the fixation cross in white, set it to the center of our screen and
+   % set good quality antialiasing
     for frame = 1:isiTimeFrames - 1
 
         % Draw the fixation point
@@ -181,18 +188,38 @@ for trial = 1:numTrials
         vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     end 
 
+    tStart = GetSecs;
     
-    % draw gabor
+    % This is the drawing loop 
     Priority(topPriorityLevel);
+    %draw gabor
     Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
     kPsychDontDoRotation, propertiesMat')
-    WaitSecs (1)
+    Screen('Flip', window);
+
+    % Check the keyboard. The person should pressed the spacekey
+    WaitSecs(1)
     
+    trial_timer = tic()
+    
+    while trial_timer<3
+        
+        %collect responses with kbcheck
+        [keyIsDown,secs, keyCode] = KbCheck;
+        if keyCode(spaceKey)
+            response = 1
+            respMade = true
+        else
+            response = 0;
+            respMade = false
+        end
+     
+        respMat(1, trial) = responsemade;
+        respMat(2, trial) = toc(trial_timer);
+
+    end 
+
 end
-
-Screen('Flip', window)
-
-
 %disp(experiment has ended)
 DrawFormattedText(window, ['This is the end of the experiment, press any key to exit'],...
             'center', screenYpixels * 0.25, white)
