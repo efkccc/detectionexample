@@ -1,0 +1,163 @@
+---
+title: "Behavioural Analysis"
+author: "Chudi Gong"
+date: "21/05/2020"
+output: pdf_document
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(tinytex)
+library(dplyr)
+library(magrittr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+library(RColorBrewer)
+getwd()
+```
+
+```{r include=FALSE}
+#open file
+Behavioural_data <- read.csv("Behaviouraldata.csv")
+
+#creat a new file with only includedtrials 
+Behavioural_Valid <- Behavioural_data %>% 
+  #Filter out the excluded trials 
+  filter(inclusion==1)
+Behavioural_Valid 
+
+Behavioural_Excluded <- Behavioural_Valid %>%
+  filter(! response=="NaN") 
+Behavioural_Excluded
+
+Behavioural_Det <- Behavioural_Excluded %>% 
+  #only include detection 
+  filter(task=="Detection")
+Behavioural_Det
+
+"No" <-Behavioural_Det$response[Behavioural_Det$response=="0"] 
+"Yes" <-Behavioural_Det$response[Behavioural_Det$response=="1"]
+
+Behavioural_Dis <- Behavioural_Excluded %>% 
+  #only include detection 
+  filter(task=="Discrimination")
+Behavioural_Dis
+
+#Behavioural_Dis$response[Behavioural_Dis$response=="0"] <- "Anticlockwise"
+#Behavioural_Dis$response[Behavioural_Dis$response=="1"] <- "Clockwise"
+
+Behavioural_Til<- Behavioural_Excluded %>% 
+  #only include detection 
+  filter(task=="Tilt")
+Behavioural_Til
+#Behavioural_Til$response[Behavioural_Til$response=="0"] <- "Vertical"
+#Behavioural_Til$response[Behavioural_Til$response=="1"] <- "Tilted"
+
+#Behavioural_Excluded <- rbind(Behavioural_Det, Behavioural_Dis, Behavioural_Til)
+
+#count the total no of trials for each task for each participant
+total_trials <- Behavioural_Valid %>%
+  group_by(subj_id, task) %>%
+  summarise(totaltrials=(count=n()))
+total_trials
+
+p_trials <- Behavioural_Valid %>%
+  group_by(subj_id, task) %>%
+  filter(response=="1") %>%
+  summarise(p_trials=(count=n()))
+p_trials
+
+#count correct trial for each task
+individual_trials <- Behavioural_Valid %>% 
+  #group by ID, type of task and accuracy
+  group_by(subj_id, task, accuracy) %>% 
+  #count number of correct/incorrect/NAH trials 
+  summarize(no_trials=(count = n())) %>%
+  #combine with the total data frame
+  inner_join(total_trials, by = c ("subj_id","task")) %>%
+  mutate(proportion = no_trials / totaltrials)
+individual_trials
+
+#combine with the ptrials data frame
+trials <- Behavioural_Valid %>% 
+  #group by ID, type of task and accuracy
+  group_by(subj_id, task, accuracy, response) %>% 
+  #count number of correct/incorrect/NAH trials 
+  summarize(no_trials=(count = n())) %>%
+  inner_join(p_trials, by = c ("subj_id","task"))
+trials
+
+#display accuracy 
+individual_accuracy <- individual_trials %>%
+  filter(accuracy==1) %>%
+  rename(correct=proportion)
+individual_accuracy
+
+#display accuracy for each task 
+task_accuracy <- individual_accuracy %>%
+  group_by(task) %>%
+  summarise(mean(correct))
+task_accuracy
+
+#creat a new file with only included trials + valid confidence rating 
+Behavioural_Excluded <- Behavioural_Valid %>% 
+  #Filter out the excluded trials 
+  filter(! response=="NaN") 
+Behavioural_Excluded
+
+#get number of subjects
+no_subj <- nlevels(Behavioural_Excluded$subj_id)
+
+#mean confidence frequency 
+confidence_distribution <- Behavioural_Excluded %>%
+  group_by(task,confidence,response) %>%
+  summarise(no_trials=(count=n())) %>%
+  mutate(frequency = no_trials / no_subj)
+confidence_distribution
+
+#creat a new file with only detection 
+confidence_detection <- confidence_distribution %>% 
+  #only include detection 
+  filter(task=="Detection")
+confidence_detection
+
+confidence_detection$response[confidence_detection$response=="0"] <- "No"
+confidence_detection$response[confidence_detection$response=="1"] <- "Yes"
+
+#creat a new file with only discrimination 
+confidence_discrimination <- confidence_distribution %>% 
+  #only include discrimination 
+  filter(task=="Discrimination") 
+confidence_discrimination
+confidence_discrimination$response[confidence_discrimination$response=="0"]<-"Anticlockwise"
+confidence_discrimination$response[confidence_discrimination$response=="1"]<-"Clockwise"
+
+#creat a new file with only tilt recognition 
+confidence_tilt <- confidence_distribution %>% 
+  #only include til recognition 
+  filter(task=="Tilt") 
+confidence_tilt
+
+confidence_tilt$response[confidence_discrimination$response=="0"] <-"Vertical"
+confidence_tilt$response[confidence_discrimination$response=="1"] <-"Tilted"
+
+#calculating HIT and FA rate
+hit_detect <- individual_trials %>% 
+  filter(task=="Detection", accuracy=="1") %>%
+  summarize(no_trials=(count = n()))
+hit_detect
+
+```
+
+## 1.Performance across different tasks.
+
+```{r, echo=FALSE, message=FALSE}
+number_ticks <- function(n) {function(limits) pretty(limits, n)}
+data <- individual_accuracy
+ggplot(data, mapping = aes(x= task, y=correct)) + ylim(0.55,0.95) + labs(title="Fig.1 Mean accuracy", y="mean accuracy")+ theme_classic() + scale_y_continuous(breaks=number_ticks(8))+
+   geom_boxplot() 
+
+```
